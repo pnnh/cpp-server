@@ -10,10 +10,10 @@
 #include <boost/asio.hpp>
 
 using namespace boost::asio;
-using namespace std;
 
 using boost::system::error_code;
-using ip::tcp;
+using boost::asio::io_service;
+using boost::asio::ip::tcp;
 
 class SocketServer
 {
@@ -23,15 +23,12 @@ public:
 
     void listen();
 
-    // 有客户端连接时accept_handler触发
-    void accept_handler(shared_ptr<tcp::socket> psocket, error_code ec);
-
 private:
-    io_service service_;
-    ip::tcp::acceptor acceptor_;
+     io_service service_;
+     tcp::acceptor acceptor_;
 
     //创建一个tcp的socket；且还是侦听
-    void start();
+    void process(std::shared_ptr<tcp::socket> socket);
 };
 
 

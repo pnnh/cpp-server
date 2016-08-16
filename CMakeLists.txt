@@ -3,7 +3,7 @@ project(cppdemo)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES main.cpp SocketServer.cpp SocketServer.h SocketClient.cpp SocketClient.h)
+set(SOURCE_FILES main.cpp SocketServer.cpp SocketServer.h)
 add_executable(cppdemo ${SOURCE_FILES})
 
 find_package(Boost COMPONENTS system REQUIRED)

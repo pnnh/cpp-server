@@ -3,41 +3,43 @@
 //
 
 #include "SocketServer.h"
-#include "SocketClient.h"
 
 
 SocketServer::SocketServer()
-:service_(), acceptor_(service_, tcp::endpoint(tcp::v4(), 7000))
+:service_(), acceptor_(service_,  tcp::endpoint(tcp::v4(), 7000))
 {
 }
 
 void SocketServer::listen() {
-    start();
     service_.run();
+
+    for(;;){
+        std::shared_ptr< tcp::socket> psocket(new tcp::socket(service_));
+
+        acceptor_.accept(*psocket );
+
+        process(psocket);
+    }
 }
 
-void SocketServer::start()
+void SocketServer::process(std::shared_ptr<tcp::socket> socket)
 {
-    // 开始等待连接（非阻塞）
-     shared_ptr<tcp::socket> psocket(new tcp::socket(service_));
+    using namespace boost::asio::error;
+    for (;;){
+//        std::array<unsigned char, 16> read_buffer;
+//        size_t n = socket->read_some(buffer(read_buffer));
+//        string str(read_buffer.begin(), read_buffer.begin() + n);
+//        std::cout<<"read :"<<str <<std::endl;
 
-    // 触发的事件只有error_code参数，所以用boost::bind把socket绑定进去
-    acceptor_.async_accept(*psocket, bind(&SocketServer::accept_handler, this, psocket, _1) );
+        try {
+            streambuf buffer(8);
+            size_t n = read_until(*socket, buffer, '\0');
 
-}
-
-
-// 有客户端连接时accept_handler触发
-void SocketServer::accept_handler( shared_ptr<tcp::socket> psocket, error_code ec)
-{
-    if(ec) return;
-
-    // 继续等待连接
-    start();
-
-    // 显示远程IP
-    std::cout << psocket->remote_endpoint().address() << std::endl;
-
-    SocketClient client(psocket);
-    client.Write("hello hahahaha");
+            streambuf::const_buffers_type bufs = buffer.data();
+            std::string line( buffers_begin(bufs),  buffers_begin(bufs) + n-1);
+            std::cout<< line <<std::endl;
+        } catch (boost::system::system_error  e){
+            std::cout << e.what()<<(e.code() == make_error_code( misc_errors::not_found)) <<std::endl;
+        }
+    }
 }
