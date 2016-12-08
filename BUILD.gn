@@ -1,0 +1,6 @@
+group("cppdemo") {
+    deps = [
+        "client:client",
+        "server:server",
+    ]
+}

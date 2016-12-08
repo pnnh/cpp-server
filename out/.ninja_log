@@ -1,0 +1,17 @@
+# ninja log v5
+0	5	0	build.ninja	fe47003ab7e3f825
+1	5195	0	obj/cppdemo.main.o	ba99a48706de2386
+0	8552	0	obj/cppdemo.SocketServer.o	608af6d98c6741df
+8552	8750	0	cppdemo	712497fec782babb
+0	3310	0	obj/cppdemo.main.o	ba99a48706de2386
+3311	3464	0	cppdemo	712497fec782babb
+0	9	0	build.ninja	fe47003ab7e3f825
+0	1795	0	obj/client/client.main.o	62a325db4fa3517d
+1796	1889	0	client	36eae1bb51d42466
+1	4236	0	obj/server/server.main.o	8d939af3d0cca413
+1	7112	0	obj/server/server.SocketServer.o	c0b7807eeff26b97
+7112	7300	0	server	9fcd2ae18d4e0f42
+0	5752	0	obj/server/server.SocketServer.o	c0b7807eeff26b97
+5754	5961	0	server	9fcd2ae18d4e0f42
+0	5863	0	obj/server/server.SocketServer.o	c0b7807eeff26b97
+5864	6074	0	server	9fcd2ae18d4e0f42

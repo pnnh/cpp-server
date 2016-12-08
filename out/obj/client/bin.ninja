@@ -1,0 +1,14 @@
+defines =
+include_dirs = -I../libs/boost/1.56.0
+cflags = -std=c++11 -Wall -Wextra -pedantic -Werror=strict-aliasing -fPIC
+cflags_cc =
+target_out_dir = obj/client
+target_output_name = bin
+
+build obj/client/bin.main.o: cxx ../client/main.cpp
+
+build bin: link obj/client/bin.main.o | ../client/libs/boost/libboost_system.so.1.56.0
+  ldflags = -lpthread -Wl,-rpath=\$$ORIGIN/ -Wl,-rpath-link=
+  libs = ../client/libs/boost/libboost_system.so.1.56.0
+  output_extension = 
+  output_dir = 
