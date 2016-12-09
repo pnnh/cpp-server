@@ -1,1 +1,0 @@
-build.ninja: /home/larry/Documents/projects/cpp/cppdemo/BUILD.gn /home/larry/Documents/projects/cpp/cppdemo/build/BUILD.gn /home/larry/Documents/projects/cpp/cppdemo/build/BUILDCONFIG.gn /home/larry/Documents/projects/cpp/cppdemo/build/toolchain/BUILD.gn /home/larry/Documents/projects/cpp/cppdemo/client/BUILD.gn /home/larry/Documents/projects/cpp/cppdemo/server/BUILD.gn

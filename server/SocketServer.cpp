@@ -28,16 +28,26 @@ void SocketServer::accept() {
 void SocketServer::process(std::shared_ptr<tcp::socket> socket)
 {
     using namespace boost::asio::error;
-    char data[1024];
-    
-    error_code error;
-    size_t length = socket.get()->read_some(boost::asio::buffer(data), error);
 
-    if (error)
-      std::cerr << error << std::endl;
+    streambuf buffer;
+    async_read_until(*socket, buffer, '}', [](error_code ec, size_t n) {
+        std::cout << "xxx" << ec << n << std::endl;
+    });
 
-    std::cout << data << length << std::endl;
     return;
+
+//    async_read_until(*socket, *buffer, '\0', [buffer, this, socket](error_code ec, std::size_t n) {
+//        if (ec) {
+//            std::cerr << "async_read_until " << ec.message() <<std::endl;
+//            return;
+//        }
+//
+//        streambuf::const_buffers_type bufs = buffer->data();
+//        std::string line( buffers_begin(bufs),  buffers_begin(bufs) + n-1);
+//        std::cout<< "xxx" << line <<std::endl;
+//        this -> operate(line);
+//        this -> process(socket);
+//    });
     
 }
 
