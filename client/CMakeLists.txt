@@ -5,4 +5,5 @@ if (Boost_FOUND)
     LINK_LIBRARIES(${Boost_LIBRARIES})
 endif (Boost_FOUND)
 
-add_executable(server server.cpp)
+add_executable(client client.cpp)
+
