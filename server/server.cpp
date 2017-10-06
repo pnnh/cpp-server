@@ -2,12 +2,13 @@
 #include <boost/asio.hpp>
 #include <iostream>
 #include <boost/array.hpp>
+#include <msgpack.hpp>
 
 boost::asio::io_service io_service;
 boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), 7000);
 boost::asio::ip::tcp::acceptor acceptor(io_service, endpoint);
 boost::asio::ip::tcp::socket sock(io_service);
-boost::array<char, 4096> buffer;
+boost::array<char, 40960> buffer;
 
 void read_handler(boost::system::error_code ec, std::size_t size);
 
@@ -24,6 +25,24 @@ void write_handler(boost::system::error_code ec, std::size_t size) {
 
 void read_handler(boost::system::error_code ec, std::size_t size) {
     if (!ec) {
+
+
+
+        msgpack::unpacker pac;
+        // feeds the buffer.
+        pac.reserve_buffer(size);
+        memcpy(pac.buffer(), buffer.data(), size);
+        pac.buffer_consumed(size);
+
+        // now starts streaming deserialization.
+        msgpack::object_handle oh;
+        while(pac.next(oh)) {
+            std::cout << "<--" << oh.get() << std::endl;
+        }
+
+        //std::cout << "<==" << std::string(buffer.data()) << std::endl;
+
+
         std::string data = std::string(buffer.data(), size);
         boost::asio::async_write(sock, boost::asio::buffer(data), write_handler);
     } else std::cerr << "read" << ec.message() << size << std::endl;

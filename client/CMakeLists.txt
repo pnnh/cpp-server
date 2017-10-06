@@ -6,4 +6,7 @@ if (Boost_FOUND)
 endif (Boost_FOUND)
 
 add_executable(client client.cpp)
-
+TARGET_INCLUDE_DIRECTORIES (client
+        PRIVATE
+        $<TARGET_PROPERTY:msgpackc,INTERFACE_INCLUDE_DIRECTORIES>
+        )

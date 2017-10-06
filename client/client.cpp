@@ -3,24 +3,48 @@
 #include <boost/asio.hpp>
 #include <boost/array.hpp>
 #include <boost/thread.hpp>
+#include <msgpack.hpp>
 
 boost::asio::io_service io_service;
 boost::asio::ip::tcp::resolver resolver(io_service);
 boost::asio::ip::tcp::socket sock(io_service);
-boost::array<char, 4096> buffer;
+boost::array<char, 40960> buffer;
 
 void read_handler(boost::system::error_code ec, std::size_t size);
 
+int n = 0;
+
 void write_read() {
     std::string str = "abc";
-    boost::asio::write(sock, boost::asio::buffer(str));
+
+    msgpack::sbuffer sbuf;
+    msgpack::packer<msgpack::sbuffer> pk(&sbuf);
+    pk.pack(std::string("Log message ... " + std::to_string(n++)));
+    pk.pack(std::string("=================="));
+
+    auto buf = boost::asio::buffer(sbuf.data(), sbuf.size());
+    boost::asio::write(sock, buf);
     sock.async_read_some(boost::asio::buffer(buffer), read_handler);
 }
 
 void read_handler(boost::system::error_code ec, std::size_t size) {
     if (!ec) {
-        std::cout << std::string(buffer.data(), size) << std::endl;
+        //std::cout << std::string(buffer.data(), size) << std::endl;
         //sock.async_read_some(boost::asio::buffer(buffer), read_handler);
+
+
+        msgpack::unpacker pac;
+        // feeds the buffer.
+        pac.reserve_buffer(size);
+        memcpy(pac.buffer(), buffer.data(), size);
+        pac.buffer_consumed(size);
+
+        // now starts streaming deserialization.
+        msgpack::object_handle oh;
+        while(pac.next(oh)) {
+            std::cout << "<--" << oh.get() << std::endl;
+        }
+
         boost::this_thread::sleep(boost::posix_time::seconds(1));
         write_read();
     } else std::cerr << "read " << ec.message() << std::endl;
