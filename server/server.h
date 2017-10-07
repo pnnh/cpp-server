@@ -49,7 +49,6 @@ public:
 private:
     Server &_server;
     boost::asio::ip::tcp::socket _socket;
-    boost::asio::io_service::strand _strand;
     msgpack::unpacker _unp;
     const static size_t _header_length = 8;
     uint8_t _header_buffer[_header_length];
