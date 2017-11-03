@@ -15,15 +15,19 @@ void read_handler(boost::system::error_code ec, std::size_t size);
 int n = 0;
 
 void write_read() {
+//    std::string str = "abc";
+//
+//    msgpack::sbuffer sbuf;
+//    msgpack::packer<msgpack::sbuffer> pk(&sbuf);
+//    pk.pack(std::string("Log message ... " + std::to_string(n++)));
+//    pk.pack(std::string("=================="));
+//
+//    auto buf = boost::asio::buffer(sbuf.data(), sbuf.size());
+//    boost::asio::write(sock, buf);
+
     std::string str = "abc";
+    boost::asio::write(sock, boost::asio::buffer(str));
 
-    msgpack::sbuffer sbuf;
-    msgpack::packer<msgpack::sbuffer> pk(&sbuf);
-    pk.pack(std::string("Log message ... " + std::to_string(n++)));
-    pk.pack(std::string("=================="));
-
-    auto buf = boost::asio::buffer(sbuf.data(), sbuf.size());
-    boost::asio::write(sock, buf);
     sock.async_read_some(boost::asio::buffer(buffer), read_handler);
 }
 

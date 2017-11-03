@@ -1,62 +1,73 @@
-#include <string>
-#include <boost/asio.hpp>
-#include <iostream>
-#include <boost/array.hpp>
-#include <msgpack.hpp>
+//
+// Created by larry on 17-11-2.
+//
 
-boost::asio::io_service io_service;
-boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), 7000);
-boost::asio::ip::tcp::acceptor acceptor(io_service, endpoint);
-boost::asio::ip::tcp::socket sock(io_service);
-boost::array<char, 40960> buffer;
+#include "server.h"
 
-void read_handler(boost::system::error_code ec, std::size_t size);
-
-void read() {
-    sock.async_read_some(boost::asio::buffer(buffer), read_handler);
+Server::Server(unsigned short port_num)  //: io_service()//,
+    //endpoint(boost::asio::ip::tcp::v4(), port_num)//,
+    //acceptor(io_service, endpoint)
+{
+    io_service = new boost::asio::io_service();
+    endpoint = new boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port_num);
+    acceptor = new boost::asio::ip::tcp::acceptor(*io_service, *endpoint);
 }
 
-void write_handler(boost::system::error_code ec, std::size_t size) {
-    if (ec) {
-        std::cerr << "write" << ec.message() << size << std::endl;
-    }
-    read();
-}
-
-void read_handler(boost::system::error_code ec, std::size_t size) {
-    if (!ec) {
+//boost::asio::ip::tcp::socket& Server::Socket() {
+//    return new boost::asio::ip::tcp::socket(io_service);
+//}
 
 
-
-        msgpack::unpacker pac;
-        // feeds the buffer.
-        pac.reserve_buffer(size);
-        memcpy(pac.buffer(), buffer.data(), size);
-        pac.buffer_consumed(size);
-
-        // now starts streaming deserialization.
-        msgpack::object_handle oh;
-        while(pac.next(oh)) {
-            std::cout << "<--" << oh.get() << std::endl;
-        }
-
-        //std::cout << "<==" << std::string(buffer.data()) << std::endl;
-
-
-        std::string data = std::string(buffer.data(), size);
-        boost::asio::async_write(sock, boost::asio::buffer(data), write_handler);
-    } else std::cerr << "read" << ec.message() << size << std::endl;
-}
-
-void accept_handler(boost::system::error_code ec) {
+void  accept_handler(boost::system::error_code ec) {
+    std::cout<<"connected22222"<<std::endl;
     if(!ec) {
-        //sock.async_read_some(boost::asio::buffer(buffer), read_handler);
-        read();
     } else std::cerr << "accept" << ec.message() << std::endl;
 }
 
-int main() {
-    acceptor.listen();
-    acceptor.async_accept(sock, accept_handler);
-    io_service.run();
+
+int Server::Serve()
+{
+    acceptor -> listen();
+        //auto accepter = new Accepter(this);
+    Accepter accepter(this);
+//    auto accepter = this -> Accept();
+//    //boost::asio::ip::tcp::socket sock(io_service);
+ acceptor->async_accept(*accepter.Socket(), accepter);
+//    //acceptor.async_accept(accepter -> Socket(), *accepter);
+
+//    boost::asio::ip::tcp::socket sock(*io_service);
+//    acceptor -> async_accept(sock, accept_handler);
+     io_service->run();
+    return 0;
+}
+
+Accepter* Server::Accept() {
+    //return new Accepter(this, &sock);
+};
+
+//boost::array<char, 40960> buffer;
+//char buffer[4096];
+void Accepter::operator()(boost::system::error_code ec) {
+    std::cout<<"connected"<<std::endl;
+    if(!ec) {
+        //auto reader = new Reader();
+        Reader reader;
+        //socket -> async_read_some(reader.Buffer(), read_handler);
+        //socket->async_read_some(boost::asio::buffer(*reader->Buffer()), *reader);
+        socket->async_read_some(boost::asio::buffer(reader.Buffer2(), 4096), reader);
+
+        //socket->async_read_some(boost::asio::buffer(buffer), *reader);
+        //socket->async_read_some(boost::asio::buffer(buffer, 4096), *reader);
+    } else std::cerr << "accept" << ec.message() << std::endl;
+}
+
+void Reader::operator()(boost::system::error_code ec, std::size_t size) {
+    std::cout<<"reading "<< size <<std::endl;
+    if (!ec) {
+        //std::string data = std::string(buff.data(), size);
+        //std::string data = std::string(buffer.data(), size);
+        //std::string data = std::string(buffer , size);
+        std::string data = std::string(buffer2, size);
+        std::cout << "<==" << data << std::endl;
+    } else std::cerr << "read" << ec.message() << size << std::endl;
 }
