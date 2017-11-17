@@ -19,14 +19,6 @@ void write_read() {
     uint8_t * buff = new uint8_t [8] ;
     buff[0] = 100;
     buff[1] = 126;
-    uint32_t length = 128;
-    uint32_t stream = 769;
-    buff[2] = (uint8_t)(length >> 16);
-    buff[3] = (uint8_t)(length >> 8);
-    buff[4] = (uint8_t)(length);
-    buff[5] = (uint8_t)(stream >> 16);
-    buff[6] = (uint8_t)(stream >> 8);
-    buff[7] = (uint8_t)(stream);
 //    buff[3] = 4;
 //    buff[4] = 5;
 //    char * buff = new char [5] ;
@@ -35,19 +27,8 @@ void write_read() {
 //    buff[2] = 'c';
 //    buff[3] = 'd';
 //    buff[4] = 'e';
-    boost::asio::write(sock, boost::asio::buffer(buff, 8));
-//    boost::asio::write(sock, boost::asio::buffer(buff, 1));
-//    boost::this_thread::sleep(boost::posix_time::seconds(2));
-//    boost::asio::write(sock, boost::asio::buffer(buff, 3));
-//    boost::this_thread::sleep(boost::posix_time::seconds(2));
-//    boost::asio::write(sock, boost::asio::buffer(buff, 4));
-//    boost::this_thread::sleep(boost::posix_time::seconds(2));
-//    boost::asio::write(sock, boost::asio::buffer(buff, 2));
-//    boost::this_thread::sleep(boost::posix_time::seconds(2));
-//    boost::asio::write(sock, boost::asio::buffer(buff, 5));
 
-    boost::this_thread::sleep(boost::posix_time::seconds(300));
-return;
+
 
     std::string str = "abc";
 
@@ -61,7 +42,46 @@ return;
     std::cout << "size " << sbuf.size() << std::endl;
 
 
+    uint32_t length = (uint32_t)sbuf.size();
+    uint32_t stream = 769;
+    buff[2] = (uint8_t)(length >> 16);
+    buff[3] = (uint8_t)(length >> 8);
+    buff[4] = (uint8_t)(length);
+    buff[5] = (uint8_t)(stream >> 16);
+    buff[6] = (uint8_t)(stream >> 8);
+    buff[7] = (uint8_t)(stream);
+
+    boost::asio::write(sock, boost::asio::buffer(buff, 8));
+
     boost::asio::write(sock, buf);
+
+
+//    boost::asio::write(sock, boost::asio::buffer(buff, 1));
+//    boost::this_thread::sleep(boost::posix_time::seconds(2));
+//    boost::asio::write(sock, boost::asio::buffer(buff, 3));
+//    boost::this_thread::sleep(boost::posix_time::seconds(2));
+//    boost::asio::write(sock, boost::asio::buffer(buff, 4));
+//    boost::this_thread::sleep(boost::posix_time::seconds(2));
+//    boost::asio::write(sock, boost::asio::buffer(buff, 2));
+//    boost::this_thread::sleep(boost::posix_time::seconds(2));
+//    boost::asio::write(sock, boost::asio::buffer(buff, 5));
+
+    boost::this_thread::sleep(boost::posix_time::seconds(300));
+return;
+
+//    std::string str = "abc";
+//
+//    msgpack::sbuffer sbuf;
+//    msgpack::packer<msgpack::sbuffer> pk(&sbuf);
+//    pk.pack(128);
+//    pk.pack(std::string("Log message ... " + std::to_string(n++)));
+//    pk.pack(std::string("=================="));
+//
+//    auto buf = boost::asio::buffer(sbuf.data(), sbuf.size());
+//    std::cout << "size " << sbuf.size() << std::endl;
+//
+//
+//    boost::asio::write(sock, buf);
 
 //    int n = 0;
 //    while(n++ < 3) {

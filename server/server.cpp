@@ -50,12 +50,12 @@ void Accepter::operator()(boost::system::error_code ec) {
 }
 
 msgpack::unpacker unp;
-std::size_t const window_size = 50;
+//std::size_t const window_size = 50;
 
-void do_read(boost::asio::ip::tcp::socket *socket) {
-    unp.reserve_buffer(window_size);
+void do_read(boost::asio::ip::tcp::socket *socket, size_t length) {
+    unp.reserve_buffer(length);
     auto reader = Reader(socket);
-    socket->async_read_some(boost::asio::buffer(unp.buffer(), window_size), reader);
+    socket->async_read_some(boost::asio::buffer(unp.buffer(), length), reader);
 }
 
 
@@ -85,6 +85,9 @@ void HeadReader::operator()(boost::system::error_code ec, std::size_t size) {
 
         std::cout<<"head xxx"<< (int)type << " " << (int)flags << " " << length << " " << stream <<std::endl;
         //do_read2(_socket);
+
+        do_read(_socket, length);
+
         //std::cout<<"head yyyy"<< buffer3[0] << buffer3[1]<<buffer3[2] <<std::endl;
     } else std::cerr << "read error " << ec.message() << size << std::endl;
 }
