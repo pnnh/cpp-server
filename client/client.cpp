@@ -15,20 +15,53 @@ void read_handler(boost::system::error_code ec, std::size_t size);
 int n = 0;
 
 void write_read() {
-//    std::string str = "abc";
-//
-//    msgpack::sbuffer sbuf;
-//    msgpack::packer<msgpack::sbuffer> pk(&sbuf);
-//    pk.pack(std::string("Log message ... " + std::to_string(n++)));
-//    pk.pack(std::string("=================="));
-//
-//    auto buf = boost::asio::buffer(sbuf.data(), sbuf.size());
-//    boost::asio::write(sock, buf);
+
+    uint8_t * buff = new uint8_t [5] ;
+    buff[0] = 1;
+    buff[1] = 2;
+    buff[2] = 3;
+    buff[3] = 4;
+    buff[4] = 5;
+//    char * buff = new char [5] ;
+//    buff[0] = 'a';
+//    buff[1] = 'b';
+//    buff[2] = 'c';
+//    buff[3] = 'd';
+//    buff[4] = 'e';
+    boost::asio::write(sock, boost::asio::buffer(buff, 1));
+    boost::this_thread::sleep(boost::posix_time::seconds(3));
+    boost::asio::write(sock, boost::asio::buffer(buff, 3));
+    boost::this_thread::sleep(boost::posix_time::seconds(3));
+    boost::asio::write(sock, boost::asio::buffer(buff, 4));
+    boost::this_thread::sleep(boost::posix_time::seconds(3));
+    boost::asio::write(sock, boost::asio::buffer(buff, 2));
+    boost::this_thread::sleep(boost::posix_time::seconds(3));
+    boost::asio::write(sock, boost::asio::buffer(buff, 5));
+
+    boost::this_thread::sleep(boost::posix_time::seconds(300));
+return;
 
     std::string str = "abc";
-    boost::asio::write(sock, boost::asio::buffer(str));
 
-    sock.async_read_some(boost::asio::buffer(buffer), read_handler);
+    msgpack::sbuffer sbuf;
+    msgpack::packer<msgpack::sbuffer> pk(&sbuf);
+    pk.pack(128);
+    pk.pack(std::string("Log message ... " + std::to_string(n++)));
+    pk.pack(std::string("=================="));
+
+    auto buf = boost::asio::buffer(sbuf.data(), sbuf.size());
+    std::cout << "size " << sbuf.size() << std::endl;
+
+
+    boost::asio::write(sock, buf);
+
+//    int n = 0;
+//    while(n++ < 3) {
+//        std::string str = "hello " + std::to_string(n) + "  ";
+//        boost::asio::write(sock, boost::asio::buffer(str));
+//    }
+
+    //sock.async_read_some(boost::asio::buffer(buffer), read_handler);
 }
 
 void read_handler(boost::system::error_code ec, std::size_t size) {
