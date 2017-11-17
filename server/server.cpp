@@ -53,11 +53,8 @@ msgpack::unpacker unp;
 std::size_t const window_size = 50;
 
 void do_read(boost::asio::ip::tcp::socket *socket) {
-
     unp.reserve_buffer(window_size);
     auto reader = Reader(socket);
-    //socket->async_read_some(boost::asio::buffer(reader.Buffer2(), 4096), reader);
-    //socket->async_read_some(boost::asio::buffer(reader.Buffer2(), 4096), reader);
     socket->async_read_some(boost::asio::buffer(unp.buffer(), window_size), reader);
 }
 
@@ -67,15 +64,27 @@ void do_read2(boost::asio::ip::tcp::socket *socket) {
     boost::asio::async_read(*socket,
                             boost::asio::buffer(headReader.buffer2, HeadReader::length),
         HeadReader::condition, headReader);
-    //socket->async_read_some(boost::asio::buffer(headReader.buffer2, HeadReader::length), headReader);
 }
 
 
 void HeadReader::operator()(boost::system::error_code ec, std::size_t size) {
     std::cout<<"head reading "<< size <<std::endl;
     if (!ec) {
-        std::cout<<"head xxx"<< (int)buffer2[0] << (int)buffer2[1]<<(int)buffer2[2] <<std::endl;
-        do_read2(_socket);
+
+        std::cout<<"head xxx"<< (int)buffer2[0] << (int)buffer2[1]<<(int)buffer2[2]
+                <<(int)buffer2[3]<<(int)buffer2[4]<<(int)buffer2[5]
+                <<(int)buffer2[6]<<(int)buffer2[7]<<std::endl;
+
+        auto type = (uint8_t)buffer2[0];
+        auto flags = (uint8_t)buffer2[1];
+        std::cout<<"head yyy"<< ((uint32_t)buffer2[2] << 16) <<std::endl;
+        uint32_t length = (uint32_t)buffer2[2] << 16 | (uint32_t)buffer2[3] << 8 |
+                (uint32_t)buffer2[4];
+        uint32_t stream = (uint32_t)buffer2[5] << 16 | (uint32_t)buffer2[6] << 8 |
+                          (uint32_t)buffer2[7];
+
+        std::cout<<"head xxx"<< (int)type << " " << (int)flags << " " << length << " " << stream <<std::endl;
+        //do_read2(_socket);
         //std::cout<<"head yyyy"<< buffer3[0] << buffer3[1]<<buffer3[2] <<std::endl;
     } else std::cerr << "read error " << ec.message() << size << std::endl;
 }
@@ -89,8 +98,8 @@ void Accepter::Read() {
     //auto reader = Reader(this -> socket);
     //socket->async_read_some(boost::asio::buffer(reader.Buffer2(), 4096), reader);
 
-    //do_read(socket);
     do_read2(socket);
+    //do_read(socket);
 }
 
 
@@ -104,15 +113,15 @@ void Reader::operator()(boost::system::error_code ec, std::size_t size) {
         //auto reader = Reader(_socket);
         //_socket->async_read_some(boost::asio::buffer(reader.Buffer2(), 4096), reader);
 
-//        unp.buffer_consumed(size);
-//        msgpack::object_handle oh;
-//        while (unp.next(oh)) {
-//            std::cout << "<---" << oh.get() << std::endl;
-//            // In order to finish the program,
-//            // return if one complete msgpack is processed.
-//            // In actual server, don't return here.
-//            //return;
-//        }
+        unp.buffer_consumed(size);
+        msgpack::object_handle oh;
+        while (unp.next(oh)) {
+            std::cout << "<---" << oh.get() << std::endl;
+            // In order to finish the program,
+            // return if one complete msgpack is processed.
+            // In actual server, don't return here.
+            //return;
+        }
 
         //do_read(_socket);
 

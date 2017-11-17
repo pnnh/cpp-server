@@ -71,10 +71,10 @@ private:
 
 class HeadReader {
 public:
-    const static size_t length = 3;
+    const static size_t length = 8;
     HeadReader(boost::asio::ip::tcp::socket *socket) : _socket(socket) {
         buffer2 = new uint8_t[length];
-        buffer3 = new char[length];
+        //buffer3 = new char[length];
     }
     void operator()(boost::system::error_code, std::size_t);
 
