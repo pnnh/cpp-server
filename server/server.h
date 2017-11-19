@@ -21,12 +21,10 @@ public:
     Server(unsigned short port_num);
     int Serve();
     Accepter* Accept();
-    boost::asio::io_service* Service() { return io_service; }
-
 private:
-    boost::asio::io_service *io_service;
-    boost::asio::ip::tcp::endpoint *endpoint;
-    boost::asio::ip::tcp::acceptor *acceptor;
+    boost::asio::io_service _io_service;
+    boost::asio::ip::tcp::endpoint _endpoint;
+    boost::asio::ip::tcp::acceptor _acceptor;
 
 
     //void accept_handler(boost::system::error_code ec);
@@ -34,16 +32,14 @@ private:
 
 class Accepter {
 public:
-    Accepter(Server *serv ) :
-            server(serv) {
-        socket = new boost::asio::ip::tcp::socket(*serv->Service());
+    Accepter(Server *server, boost::asio::ip::tcp::socket *socket) :
+            _server(server), _socket(socket) {
     };
     void Read();
     void operator()(boost::system::error_code ec);
-    boost::asio::ip::tcp::socket* Socket() { return socket; }
 private:
-    Server *server;
-    boost::asio::ip::tcp::socket *socket;
+    Server *_server;
+    boost::asio::ip::tcp::socket *_socket;
 };
 
 
