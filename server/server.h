@@ -25,66 +25,33 @@ private:
     boost::asio::io_service _io_service;
     boost::asio::ip::tcp::endpoint _endpoint;
     boost::asio::ip::tcp::acceptor _acceptor;
-
-
-    //void accept_handler(boost::system::error_code ec);
 };
 
 class Accepter {
 public:
-    Accepter(Server *server, boost::asio::ip::tcp::socket *socket) :
-            _server(server), _socket(socket) {
-    };
-    void Read();
-    void operator()(boost::system::error_code ec);
+    Accepter(Server *server, boost::asio::io_service& io_service);
+    void readHeader();
+    void readBody(size_t length);
+    msgpack::unpacker* unpacker() { return _unp; }
+    boost::asio::ip::tcp::socket* Socket() { return _socket; }
+
+    static std::size_t header_condition(const boost::system::error_code& error, std::size_t bytes_transferred) {
+        return bytes_transferred >= _header_length ? 0 : _header_length - bytes_transferred;
+    }
+    uint8_t * head_buffer() { return _header_buffer; }
 private:
     Server *_server;
     boost::asio::ip::tcp::socket *_socket;
+    msgpack::unpacker *_unp;
+    const static size_t _header_length = 8;
+    uint8_t *_header_buffer;
 };
 
-
-class Reader {
-public:
-    Reader(boost::asio::ip::tcp::socket *socket) : _socket(socket) {
-        buffer2 = new char[4096];
-    }
-    void operator()(boost::system::error_code, std::size_t);
-    //boost::array<char, 40960>* Buffer() { return &buff; }
-
-    char* Buffer2() { return buffer2; };
-private:
-    //Accepter *accepter;
-    boost::asio::ip::tcp::socket *_socket;
-    boost::array<char, 40960> buff;
-
-    char *buffer2;
-    //boost::asio::mutable_buffer* buffer;
-};
-
-
-
-
-
-class HeadReader {
-public:
-    const static size_t length = 8;
-    HeadReader(boost::asio::ip::tcp::socket *socket) : _socket(socket) {
-        buffer2 = new uint8_t[length];
-        //buffer3 = new char[length];
-    }
-    void operator()(boost::system::error_code, std::size_t);
-
-    static std::size_t condition(const boost::system::error_code& error, std::size_t bytes_transferred) {
-
-        std::cout<<"bytes_transferred "<< error << "  " << bytes_transferred <<std::endl;
-        return bytes_transferred >= length ? 0 : length - bytes_transferred;
-    }
-
-    uint8_t *buffer2;
-    char *buffer3;
-private:
-    //Accepter *accepter;
-    boost::asio::ip::tcp::socket *_socket;
+struct Header {
+    uint8_t type;
+    uint8_t flags;
+    uint32_t length;
+    uint32_t stream;
 };
 
 #endif //CPPDEMO_SERVER_H

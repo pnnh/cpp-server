@@ -19,71 +19,71 @@ int Server::Serve()
     return 0;
 }
 
+boost::system::error_code check_error(std::string tag, boost::system::error_code ec) {
+    if (ec) std::cerr << tag << ec.message() << std::endl;
+    return ec;
+}
+
 Accepter* Server::Accept() {
-    auto socket = new boost::asio::ip::tcp::socket(_io_service);
-    _acceptor.async_accept(*socket, Accepter(this, socket));
+    auto accepter = new Accepter(this, _io_service);
+    _acceptor.async_accept(*accepter -> Socket(), [accepter](boost::system::error_code ec) {
+        if (check_error("接受连接出错", ec)) return;
+        accepter -> readHeader();
+    });
 };
 
-msgpack::unpacker unp;
 
-void do_read(boost::asio::ip::tcp::socket *socket, size_t length) {
-    unp.reserve_buffer(length);
-    auto reader = Reader(socket);
-    socket->async_read_some(boost::asio::buffer(unp.buffer(), length), reader);
+Header parse_header(uint8_t *buffer) {
+    uint8_t type = buffer[0];
+    uint8_t flags = buffer[1];
+    uint32_t length = buffer[2];
+    length = (length << 8 | buffer[3]) << 8 | buffer[4];
+    uint32_t stream = buffer[5];
+    stream = (stream << 8 | buffer[6]) << buffer[7];
+
+    return Header{type, flags, length, stream};
+}
+
+void parse_body(msgpack::unpacker *unp2, size_t size) {
+    unp2->buffer_consumed(size);
+    msgpack::object_handle oh;
+    while (unp2->next(oh)) {
+        std::cout << "<---" << oh.get() << std::endl;
+    }
 }
 
 
-void do_read2(boost::asio::ip::tcp::socket *socket) {
-}
-
-
-void Accepter::operator()(boost::system::error_code ec) {
-    std::cout<<"connected"<<std::endl;
-    if(!ec) {
-        Read();
-        _server->Accept();
-    } else std::cerr << "accept" << ec.message() << std::endl;
-}
-
-
-
-void HeadReader::operator()(boost::system::error_code ec, std::size_t size) {
-    std::cout<<"head reading "<< size <<std::endl;
-    if (!ec) {
-        uint8_t type = buffer2[0];
-        uint8_t flags = buffer2[1];
-        std::cout<<"head yyy"<< ((uint32_t)buffer2[2] << 16) <<std::endl;
-        uint32_t length = buffer2[2];
-        length = (length << 8 | buffer2[3]) << 8 | buffer2[4];
-        uint32_t stream = buffer2[5];
-        stream = (stream << 8 | buffer2[6]) << buffer2[7];
-
-        std::cout<<"head xxx"<< (int)type << " " << (int)flags << " " << length << " " << stream <<std::endl;
-
-        do_read(_socket, length);
-    } else std::cerr << "read error " << ec.message() << size << std::endl;
-}
-
-void Accepter::Read() {
-    auto headReader = HeadReader(_socket);
+void Accepter::readHeader() {
+    auto handler = [this](boost::system::error_code ec, std::size_t size) {
+        if (check_error("读取消息头出错", ec)) return;
+        auto header = parse_header(head_buffer());
+        readBody(header.length);
+    };
     boost::asio::async_read(*_socket,
-                            boost::asio::buffer(headReader.buffer2, HeadReader::length),
-                            HeadReader::condition, headReader);
+                            boost::asio::buffer(_header_buffer, _header_length),
+                            Accepter::header_condition,
+                            handler);
 }
 
+Accepter::Accepter(Server *server, boost::asio::io_service& io_service) :
+        _server(server) {
+    _unp = new msgpack::unpacker();
+    _socket = new boost::asio::ip::tcp::socket(io_service);
+    _header_buffer = new uint8_t[_header_length];
+};
 
-
-void Reader::operator()(boost::system::error_code ec, std::size_t size) {
-    std::cout<<"reading "<< size <<std::endl;
-    if (!ec) {
-        unp.buffer_consumed(size);
-        msgpack::object_handle oh;
-        while (unp.next(oh)) {
-            std::cout << "<---" << oh.get() << std::endl;
-        }
-
-        //do_read(_socket);
-
-
-    } else std::cerr << "read error " << ec.message() << size << std::endl;
+void Accepter::readBody(size_t length) {
+    _unp->reserve_buffer(length);
+    auto condition = [length](const boost::system::error_code& error, std::size_t bytes_transferred) -> std::size_t {
+        return bytes_transferred >= length ? 0 : length - bytes_transferred;
+    };
+    auto handler = [this](boost::system::error_code ec, std::size_t size) {
+        if (check_error("读取消息体出错", ec)) return;
+        parse_body(_unp, size);
+        readHeader();
+    };
+    boost::asio::async_read(*_socket,
+                            boost::asio::buffer(_unp -> buffer(), length),
+                            condition, handler);
 }
+
