@@ -50,7 +50,7 @@ void waitMsg() {
     while(1) {
         std::string msg;
         std::cin >> msg;
-        if (msg == "quit") {
+        if (msg == "q") {
             break;
         }
         //std::cout << msg << std::endl;

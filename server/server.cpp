@@ -10,30 +10,41 @@ _endpoint(boost::asio::ip::tcp::v4(), port_num),
 _acceptor(_io_service, _endpoint)
 {
 }
+Server::~Server(){
+    for (auto &_connection : _connections) {
+        delete _connection;
+    }
+}
 
-int Server::Serve()
+void Server::Serve()
 {
     _acceptor.listen();
     Accept();
     _io_service.run();
-    return 0;
 }
 
-boost::system::error_code check_error(std::string tag, boost::system::error_code ec) {
+void Server::remove(Connection *connection) {
+    _connections.remove(connection);
+    delete connection;
+}
+
+boost::system::error_code check_error(const std::string &tag, boost::system::error_code ec) {
     if (ec) std::cerr << tag << ec.message() << std::endl;
     return ec;
 }
 
-Accepter* Server::Accept() {
-    auto accepter = new Accepter(this, _io_service);
-    _acceptor.async_accept(*accepter -> Socket(), [accepter](boost::system::error_code ec) {
+void Server::Accept() {
+    auto connection = new Connection(this, _io_service);
+    _connections.push_back(connection);
+    _acceptor.async_accept(*connection -> Socket(), [this](boost::system::error_code ec) {
         if (check_error("接受连接出错", ec)) return;
-        accepter -> readHeader();
+        _connections.back() -> readHeader();
+        Accept();
     });
 };
 
 
-Header parse_header(uint8_t *buffer) {
+Header parse_header(const uint8_t *buffer) {
     uint8_t type = buffer[0];
     uint8_t flags = buffer[1];
     uint32_t length = buffer[2];
@@ -52,33 +63,45 @@ void parse_body(msgpack::unpacker *unp2, size_t size) {
     }
 }
 
-
-void Accepter::readHeader() {
+void Connection::readHeader() {
     auto handler = [this](boost::system::error_code ec, std::size_t size) {
-        if (check_error("读取消息头出错", ec)) return;
+        if (check("读取消息头出错", ec)) return;
         auto header = parse_header(head_buffer());
         readBody(header.length);
     };
     boost::asio::async_read(*_socket,
                             boost::asio::buffer(_header_buffer, _header_length),
-                            Accepter::header_condition,
+                            Connection::header_condition,
                             handler);
 }
 
-Accepter::Accepter(Server *server, boost::asio::io_service& io_service) :
+std::size_t Connection::header_condition(const boost::system::error_code &error, std::size_t bytes_transferred) {
+    if (error) return 0;
+    return bytes_transferred >= _header_length ? 0 : _header_length - bytes_transferred;
+}
+
+Connection::Connection(Server *server, boost::asio::io_service& io_service) :
         _server(server) {
-    _unp = new msgpack::unpacker();
     _socket = new boost::asio::ip::tcp::socket(io_service);
     _header_buffer = new uint8_t[_header_length];
+    _unp = new msgpack::unpacker();
 };
 
-void Accepter::readBody(size_t length) {
+Connection::~Connection() {
+    std::cerr << "connec 析构函数被调用" << std::endl;
+    delete _socket;
+    delete _header_buffer;
+    delete _unp;
+}
+
+void Connection::readBody(size_t length) {
     _unp->reserve_buffer(length);
     auto condition = [length](const boost::system::error_code& error, std::size_t bytes_transferred) -> std::size_t {
+        if (error) return 0;
         return bytes_transferred >= length ? 0 : length - bytes_transferred;
     };
     auto handler = [this](boost::system::error_code ec, std::size_t size) {
-        if (check_error("读取消息体出错", ec)) return;
+        if (check("读取消息体出错", ec)) return;
         parse_body(_unp, size);
         readHeader();
     };
@@ -87,3 +110,8 @@ void Accepter::readBody(size_t length) {
                             condition, handler);
 }
 
+boost::system::error_code Connection::check(const std::string &tag, boost::system::error_code ec) {
+    if (!check_error(tag, ec)) return {};
+    _server -> remove(this);
+    return ec;
+}

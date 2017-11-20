@@ -14,31 +14,33 @@
 
 #include <msgpack.hpp>
 
-class Accepter;
+class Connection;
 
 class Server {
 public:
-    Server(unsigned short port_num);
-    int Serve();
-    Accepter* Accept();
+    explicit Server(unsigned short port_num);
+    ~Server();
+    void Serve();
+    void Accept();
+    void remove(Connection* connection);
 private:
     boost::asio::io_service _io_service;
     boost::asio::ip::tcp::endpoint _endpoint;
     boost::asio::ip::tcp::acceptor _acceptor;
+    std::list<Connection*> _connections;
 };
 
-class Accepter {
+class Connection {
 public:
-    Accepter(Server *server, boost::asio::io_service& io_service);
+    Connection(Server *server, boost::asio::io_service& io_service);
+    ~Connection();
     void readHeader();
     void readBody(size_t length);
     msgpack::unpacker* unpacker() { return _unp; }
     boost::asio::ip::tcp::socket* Socket() { return _socket; }
-
-    static std::size_t header_condition(const boost::system::error_code& error, std::size_t bytes_transferred) {
-        return bytes_transferred >= _header_length ? 0 : _header_length - bytes_transferred;
-    }
+    static std::size_t header_condition(const boost::system::error_code& error, std::size_t bytes_transferred);
     uint8_t * head_buffer() { return _header_buffer; }
+    boost::system::error_code check(const std::string &tag, boost::system::error_code ec);
 private:
     Server *_server;
     boost::asio::ip::tcp::socket *_socket;
