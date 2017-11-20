@@ -20,25 +20,24 @@ class Connection;
 class Server {
 public:
     explicit Server(unsigned short port_num);
-    //~Server();
     void Serve();
     void Accept();
-    void remove(uint32_t id);
+    void remove(uint16_t id);
+    uint16_t generate_id();
 private:
     boost::asio::io_service _io_service;
     boost::asio::ip::tcp::endpoint _endpoint;
     boost::asio::ip::tcp::acceptor _acceptor;
-    //std::list<std::shared_ptr<Connection>> _connections;
-    uint32_t  _connection_id = 1;
-    std::map<uint32_t, std::shared_ptr<Connection>> _connections;
+    //uint32_t  _connection_id = 1;
+    const static size_t _max_connections = 2;
+    std::map<uint16_t, std::shared_ptr<Connection>> _connections;
     boost::asio::io_service::work _work;
     std::vector<std::thread> _threads;
 };
 
 class Connection {
 public:
-    Connection(Server &server, boost::asio::io_service& io_service, uint32_t id);
-    //~Connection();
+    Connection(Server &server, boost::asio::io_service& io_service, uint16_t id);
     void readHeader();
     void readBody(size_t length);
     msgpack::unpacker& unpacker() { return _unp; }
@@ -46,13 +45,14 @@ public:
     static std::size_t header_condition(const boost::system::error_code& error, std::size_t bytes_transferred);
     uint8_t * head_buffer() { return _header_buffer; }
     boost::system::error_code check(const std::string &tag, boost::system::error_code ec);
+    uint16_t id() { return _id; }
 private:
     Server &_server;
     boost::asio::ip::tcp::socket _socket;
     msgpack::unpacker _unp;
     const static size_t _header_length = 8;
     uint8_t _header_buffer[_header_length];
-    uint32_t _id;
+    uint16_t _id;
 };
 
 struct Header {

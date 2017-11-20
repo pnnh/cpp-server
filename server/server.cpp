@@ -3,6 +3,7 @@
 //
 
 #include <msgpack.hpp>
+#include <random>
 #include "server.h"
 
 Server::Server(unsigned short port_num) :
@@ -23,21 +24,31 @@ void Server::Serve()
     _io_service.run();
 }
 
-void Server::remove(uint32_t id) {
+void Server::remove(uint16_t id) {
     _connections.erase(id);
 }
 
 boost::system::error_code check_error(const std::string &tag, boost::system::error_code ec) {
-    if (ec) std::cerr << tag << ec.message() << std::endl;
+    //if (ec) std::cerr << tag << ec.message() << std::endl;
     return ec;
 }
 
+uint16_t Server::generate_id() {
+    std::random_device rd;
+    auto connection_id = uint16_t(rd() % 0xFFFF);
+    while(_connections.find(connection_id) != _connections.end()) {
+        connection_id = uint16_t(rd() % 0xFFFF);
+    }
+    return connection_id;
+}
+
 void Server::Accept() {
-    auto connection = std::make_shared<Connection>(*this, _io_service, _connection_id);
-    _connections[_connection_id++] = connection;
+    auto connection = std::make_shared<Connection>(*this, _io_service, generate_id());
     _acceptor.async_accept(connection -> Socket(), [this, connection](boost::system::error_code ec) {
-        if (check_error("接受连接出错", ec)) return;
-        connection -> readHeader();
+        if (!check_error("接受连接出错", ec) && _connections.size() < _max_connections) {
+            _connections[connection -> id()] = connection;
+            connection -> readHeader();
+        }
         Accept();
     });
 };
@@ -53,7 +64,7 @@ Header parse_header(const uint8_t *buffer) {
     return Header{type, flags, length, stream};
 }
 
-void parse_body(uint32_t id, msgpack::unpacker &unp2, size_t size) {
+void parse_body(uint16_t id, msgpack::unpacker &unp2, size_t size) {
     unp2.buffer_consumed(size);
     msgpack::object_handle oh;
     std::cout << "<-- " << id << " ";
@@ -79,7 +90,7 @@ std::size_t Connection::header_condition(const boost::system::error_code &error,
     return bytes_transferred >= _header_length ? 0 : _header_length - bytes_transferred;
 }
 
-Connection::Connection(Server &server, boost::asio::io_service& io_service, uint32_t id) :
+Connection::Connection(Server &server, boost::asio::io_service& io_service, uint16_t id) :
         _server(server), _socket(io_service), _id(id) {
 };
 
