@@ -3,6 +3,7 @@
 //#include <iostream>
 //#include <boost/array.hpp>
 //#include <msgpack.hpp>
+#include <boost/thread/thread.hpp>
 #include "server.h"
 //
 //boost::asio::io_service io_service;
@@ -57,6 +58,10 @@
 //}
 
 int main() {
-    Server server(7000);
-    server.Serve();
+//    Server server(7000);
+//    server.Serve();
+    Server(7000).Serve();
+    std::cout<<"xxxxxxxxx";
+
+    //boost::this_thread::sleep(boost::posix_time::seconds(3000));
 }
