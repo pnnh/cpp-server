@@ -24,7 +24,7 @@ void Server::Serve()
     _io_service.run();
 }
 
-void Server::remove(uint16_t id) {
+void Server::remove(uint32_t id) {
     _connections.erase(id);
 }
 
@@ -33,11 +33,10 @@ boost::system::error_code check_error(const std::string &tag, boost::system::err
     return ec;
 }
 
-uint16_t Server::generate_id() {
-    std::random_device rd;
-    auto connection_id = uint16_t(rd() % 0xFFFF);
+uint32_t Server::generate_id() {
+    auto connection_id = uint32_t(_rd() % 0xFFFFFF);
     while(_connections.find(connection_id) != _connections.end()) {
-        connection_id = uint16_t(rd() % 0xFFFF);
+        connection_id = uint32_t(_rd() % 0xFFFFFF);
     }
     return connection_id;
 }
@@ -64,7 +63,7 @@ Header parse_header(const uint8_t *buffer) {
     return Header{type, flags, length, stream};
 }
 
-void parse_body(uint16_t id, msgpack::unpacker &unp2, size_t size) {
+void parse_body(uint32_t id, msgpack::unpacker &unp2, size_t size) {
     unp2.buffer_consumed(size);
     msgpack::object_handle oh;
     std::cout << "<-- " << id << " ";
@@ -90,7 +89,7 @@ std::size_t Connection::header_condition(const boost::system::error_code &error,
     return bytes_transferred >= _header_length ? 0 : _header_length - bytes_transferred;
 }
 
-Connection::Connection(Server &server, boost::asio::io_service& io_service, uint16_t id) :
+Connection::Connection(Server &server, boost::asio::io_service& io_service, uint32_t id) :
         _server(server), _socket(io_service), _id(id) {
 };
 
