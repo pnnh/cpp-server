@@ -10,7 +10,7 @@
 #include <iostream>
 #include <boost/array.hpp>
 #include <boost/asio/read.hpp>
-
+#include <random>
 
 #include <msgpack.hpp>
 #include <thread>
