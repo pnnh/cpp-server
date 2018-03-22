@@ -12,6 +12,7 @@ if (msgpack_FOUND)
 endif (msgpack_FOUND)
 
 add_executable(server main.cpp server.cpp server.h)
+add_executable(client client.cpp)
 #TARGET_INCLUDE_DIRECTORIES (server
 #        PRIVATE
 #        $<TARGET_PROPERTY:msgpackc,INTERFACE_INCLUDE_DIRECTORIES>
