@@ -4,8 +4,6 @@ project(cppdemo)
 set(CMAKE_VERBOSE_MAKEFILE on)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -lpthread")
 
-
-
 option(server "build server" ON)
 option(grpc_server "build grpc_server" ON)
 

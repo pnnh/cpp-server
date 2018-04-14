@@ -27,3 +27,6 @@ add_executable(route_guide_client route/route_guide_client.cc route/helper.cc
         ${routesrc})
 
 configure_file(route/route_guide_db.json ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
+
+add_subdirectory(chat)
