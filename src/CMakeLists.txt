@@ -5,4 +5,4 @@ if (Boost_FOUND)
     LINK_LIBRARIES(${Boost_LIBRARIES})
 endif (Boost_FOUND)
 
-add_executable(server main.cc)
+add_executable(server main.cc http_connection.cc state.cc)
