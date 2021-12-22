@@ -4,21 +4,24 @@ project(cpp-server)
 set(CMAKE_VERBOSE_MAKEFILE on)
 set(CMAKE_CXX_STANDARD 20)
 
-list(APPEND CMAKE_PREFIX_PATH "/usr/local/Cellar")
-
 find_package(PkgConfig REQUIRED)
 
 find_package(Boost COMPONENTS system thread REQUIRED)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-LINK_LIBRARIES(${Boost_LIBRARIES})
+if (Boost_FOUND)
+    message(STATUS "Found Boost: ${FOLLY_LIBRARIES}")
+    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+    LINK_LIBRARIES(${Boost_LIBRARIES})
+endif (Boost_FOUND)
 
 find_package(folly REQUIRED)
-INCLUDE_DIRECTORIES(${folly_INCLUDE_DIRS})
-LINK_LIBRARIES(${folly_LIBRARIES})
+if (folly_FOUND)
+    message(STATUS "Found folly: ${FOLLY_LIBRARIES}")
+    INCLUDE_DIRECTORIES(${folly_INCLUDE_DIRS})
+    LINK_LIBRARIES(${FOLLY_LIBRARIES})
+endif (folly_FOUND)
 
-pkg_search_module(OPENSSL REQUIRED openssl)
-#find_package(OpenSSL REQUIRED)
-#include_directories(${OPENSSL_INCLUDE_DIR})
-#LINK_LIBRARIES(${OPENSSL_LIBRARIES})
-
-add_subdirectory(src)
+add_executable(server
+    src/main.cc 
+    src/http_connection.cc 
+    src/state.cc 
+    src/md5.cc)

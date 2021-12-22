@@ -4,3 +4,4 @@ GPATH
 GRTAGS
 out
 cmake-build-*
+build/

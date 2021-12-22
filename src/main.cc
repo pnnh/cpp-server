@@ -23,7 +23,7 @@ void http_server(tcp::acceptor &acceptor, tcp::socket &socket) {
 int main(int argc, char *argv[]) {
   try {
     auto address_str = "0.0.0.0";
-    auto port_str = "8080";
+    auto port_str = "5900";
     char *p_end;
     auto const address = net::ip::make_address(address_str);
     auto port = static_cast<unsigned short>(std::strtol(port_str, &p_end, 10));
