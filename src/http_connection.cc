@@ -3,6 +3,7 @@
 //
 
 #include "http_connection.h"
+#include "md5.h"
 
 void http_connection::read_request() {
   auto self = shared_from_this();
@@ -69,6 +70,17 @@ void http_connection::create_response() {
         << " seconds since the epoch.</p>\n"
         << "</body>\n"
         << "</html>\n";
+  } else if (request_.target() == "/md5") {
+    response_.set(http::field::content_type, "text/plain");
+    std::string s = "hello";
+
+    md5 hash;
+    md5::digest_type digest;
+
+    hash.process_bytes(s.data(), s.size());
+    hash.get_digest(digest);
+
+    beast::ostream(response_.body()) << "md5(" << s << ") = " << toString(digest) << '\n';
   } else {
     response_.result(http::status::not_found);
     response_.set(http::field::content_type, "text/plain");
