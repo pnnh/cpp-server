@@ -4,6 +4,19 @@
 
 #include "http_connection.h"
 #include "md5.h"
+#include <utility>
+#include <iostream>
+#include <folly/Format.h>
+#include <folly/futures/Future.h>
+#include <folly/executors/ThreadedExecutor.h>
+#include <folly/Uri.h>
+#include <folly/FBString.h>
+
+static void print_uri(const folly::fbstring &address) {
+  const folly::Uri uri(address);
+  const auto authority = fmt::format("The authority from {} is {}", uri.fbstr(), uri.authority());
+  std::cout << authority << std::endl;
+}
 
 void http_connection::read_request() {
   auto self = shared_from_this();
@@ -46,6 +59,10 @@ void http_connection::process_request() {
 }
 
 void http_connection::create_response() {
+  std::cerr << "query: " << request_.target();
+
+  print_uri(request_.target().to_string());
+
   if (request_.target() == "/count") {
     response_.set(http::field::content_type, "text/html");
     beast::ostream(response_.body())
