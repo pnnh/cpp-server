@@ -21,7 +21,9 @@ if (folly_FOUND)
 endif (folly_FOUND)
 
 add_executable(server
-    src/main.cc 
-    src/http_connection.cc 
-    src/state.cc 
-    src/md5.cc)
+        src/main.cc
+        src/http_connection.cc
+        src/state.cc
+        src/md5.cc)
+
+add_executable(markdown src/markdown/main.cpp src/markdown/mdtransform.hpp)
