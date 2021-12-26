@@ -9,9 +9,9 @@
 #include <boost/iostreams/copy.hpp>
 
 void HandleIndex(boost::beast::http::response<boost::beast::http::dynamic_body> &response_) {
-//    response_.set(boost::beast::http::field::content_type, "text/html");
-//    std::ifstream infile;
-//    infile.open("static/index.html");
+    response_.set(boost::beast::http::field::content_type, "text/html");
+    std::ifstream infile;
+    infile.open("static/index.html");
 
 //    boost::beast::ostream(response_.body())
 //            << "<html>\n"
@@ -35,4 +35,20 @@ void HandleIndex(boost::beast::http::response<boost::beast::http::dynamic_body> 
     //std::ifstream ifs("output", ios::binary);
 //    boost::iostreams::copy(infile,
 //                           response_.body());
+
+
+    std::string full_path = "static/index.html";
+
+    boost::beast::http::file_body::value_type file;
+    boost::beast::error_code ec;
+    file.open(
+            full_path.c_str(),
+            boost::beast::file_mode::read,
+            ec);
+    if(ec)
+    {
+        std::cout <<"File not found\r\n";
+        return;
+    }
+    boost::beast::ostream(response_.body()) << infile.rdbuf();
 }

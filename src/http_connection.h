@@ -14,7 +14,6 @@
 #include <iostream>
 #include <memory>
 #include "state.h"
-//#include "fields_alloc.hpp"
 
 class http_connection : public std::enable_shared_from_this<http_connection> {
 public:
@@ -29,47 +28,31 @@ public:
     }
 
 private:
-    //using alloc_t = fields_alloc<char>;
-    // The socket for the currently connected client.
     boost::asio::ip::tcp::socket socket_;
 
-    // The buffer for performing reads.
     boost::beast::flat_buffer buffer_{8192};
 
-    // The request message.
     boost::beast::http::request<boost::beast::http::dynamic_body> request_;
 
-    // The response message.
     boost::beast::http::response<boost::beast::http::dynamic_body> response_;
 
-    // The file-based response message.
     boost::optional<boost::beast::http::response<boost::beast::http::file_body>> file_response_;
 
-    // The file-based response serializer.
     boost::optional<boost::beast::http::response_serializer<boost::beast::http::file_body>> file_serializer_;
 
-
-    // The allocator used for the fields in the request and reply.
-    //alloc_t alloc_{8192};
-    // The timer for putting a deadline on connection processing.
     boost::asio::steady_timer deadline_{
             socket_.get_executor(), std::chrono::seconds(60)};
 
-    // Asynchronously receive a complete request message.
     void read_request();
 
-    // Determine what needs to be done with the request message.
     void process_request();
 
-    // Construct a response message based on the program state.
     void create_response();
 
-    // Asynchronously transmit the response message.
     void write_response();
 
     void send_file();
 
-    // Check whether we have spent enough time on this connection.
     void check_deadline();
 };
 

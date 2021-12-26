@@ -110,9 +110,8 @@ void http_connection::create_response() {
 
         boost::beast::ostream(response_.body()) << "md5(" << s << ") = " << toString(digest) << '\n';
     } else if (uri.path() == "/") {
-        //HandleIndex(response_);
-       // write_file_response();
-       send_file();
+        HandleIndex(response_);
+      // send_file();
         return;
     } else {
         response_.result(boost::beast::http::status::not_found);
