@@ -12,6 +12,7 @@
 #include <folly/Uri.h>
 #include <folly/FBString.h>
 #include "handlers/index.h"
+#include "utils/mime.h"
 
 void http_connection::read_request() {
     auto self = shared_from_this();
@@ -112,7 +113,6 @@ void http_connection::create_response() {
     } else if (uri.path() == "/") {
         HandleIndex(response_);
       // send_file();
-        return;
     } else {
         response_.result(boost::beast::http::status::not_found);
         response_.set(boost::beast::http::field::content_type, "text/plain");
@@ -135,82 +135,48 @@ void http_connection::write_response() {
             });
 }
 
-boost::beast::string_view
-mime_type(boost::beast::string_view path)
-{
-    using boost::beast::iequals;
-    auto const ext = [&path]
-    {
-        auto const pos = path.rfind(".");
-        if(pos == boost::beast::string_view::npos)
-            return boost::beast::string_view{};
-        return path.substr(pos);
-    }();
-    if(iequals(ext, ".htm"))  return "text/html";
-    if(iequals(ext, ".html")) return "text/html";
-    if(iequals(ext, ".php"))  return "text/html";
-    if(iequals(ext, ".css"))  return "text/css";
-    if(iequals(ext, ".txt"))  return "text/plain";
-    if(iequals(ext, ".js"))   return "application/javascript";
-    if(iequals(ext, ".json")) return "application/json";
-    if(iequals(ext, ".xml"))  return "application/xml";
-    if(iequals(ext, ".swf"))  return "application/x-shockwave-flash";
-    if(iequals(ext, ".flv"))  return "video/x-flv";
-    if(iequals(ext, ".png"))  return "image/png";
-    if(iequals(ext, ".jpe"))  return "image/jpeg";
-    if(iequals(ext, ".jpeg")) return "image/jpeg";
-    if(iequals(ext, ".jpg"))  return "image/jpeg";
-    if(iequals(ext, ".gif"))  return "image/gif";
-    if(iequals(ext, ".bmp"))  return "image/bmp";
-    if(iequals(ext, ".ico"))  return "image/vnd.microsoft.icon";
-    if(iequals(ext, ".tiff")) return "image/tiff";
-    if(iequals(ext, ".tif"))  return "image/tiff";
-    if(iequals(ext, ".svg"))  return "image/svg+xml";
-    if(iequals(ext, ".svgz")) return "image/svg+xml";
-    return "application/text";
-}
 
-void http_connection::send_file()
-{
-    std::string full_path = "static/index.html";
-
-    boost::beast::http::file_body::value_type file;
-    boost::beast::error_code ec;
-    file.open(
-            full_path.c_str(),
-            boost::beast::file_mode::read,
-            ec);
-    if(ec)
-    {
-        std::cout <<"File not found\r\n";
-        return;
-    }
-
-    file_response_.emplace(
-            std::piecewise_construct,
-            std::make_tuple()
-            //std::make_tuple(alloc_)
-            );
-
-    file_response_->result(boost::beast::http::status::ok);
-    file_response_->keep_alive(false);
-    file_response_->set(boost::beast::http::field::server, "Beast");
-    file_response_->set(boost::beast::http::field::content_type, mime_type(std::string(full_path)));
-    file_response_->body() = std::move(file);
-    file_response_->prepare_payload();
-
-    file_serializer_.emplace(*file_response_);
-
-    boost::beast::http::async_write(
-            socket_,
-            *file_serializer_,
-            [this](boost::beast::error_code ec, std::size_t)
-            {
-                socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ec);
-                file_serializer_.reset();
-                file_response_.reset();
-            });
-}
+//void http_connection::send_file()
+//{
+//    std::string full_path = "static/index.html";
+//
+//    boost::beast::http::file_body::value_type file;
+//    boost::beast::error_code ec;
+//    file.open(
+//            full_path.c_str(),
+//            boost::beast::file_mode::read,
+//            ec);
+//    if(ec)
+//    {
+//        std::cout <<"File not found\r\n";
+//        return;
+//    }
+//
+//    file_response_.emplace(
+//            std::piecewise_construct,
+//            std::make_tuple()
+//            //std::make_tuple(alloc_)
+//            );
+//
+//    file_response_->result(boost::beast::http::status::ok);
+//    file_response_->keep_alive(false);
+//    file_response_->set(boost::beast::http::field::server, "Beast");
+//    file_response_->set(boost::beast::http::field::content_type, mime_type(std::string(full_path)));
+//    file_response_->body() = std::move(file);
+//    file_response_->prepare_payload();
+//
+//    file_serializer_.emplace(*file_response_);
+//
+//    boost::beast::http::async_write(
+//            socket_,
+//            *file_serializer_,
+//            [this](boost::beast::error_code ec, std::size_t)
+//            {
+//                socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ec);
+//                file_serializer_.reset();
+//                file_response_.reset();
+//            });
+//}
 
 void http_connection::check_deadline() {
     auto self = shared_from_this();

@@ -20,10 +20,11 @@ if (folly_FOUND)
     LINK_LIBRARIES(${FOLLY_LIBRARIES})
 endif (folly_FOUND)
 
+add_executable(markdown src/markdown/main.cpp src/markdown/mdtransform.hpp)
+
 add_executable(server
         src/main.cc
         src/http_connection.cc
         src/state.cc
-        src/md5.cc src/handlers/index.cpp src/handlers/index.h)
-
-add_executable(markdown src/markdown/main.cpp src/markdown/mdtransform.hpp)
+        src/md5.cc src/handlers/index.cpp src/handlers/index.h
+        src/utils/mime.h  src/utils/mime.cpp)
