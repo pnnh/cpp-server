@@ -13,6 +13,7 @@
 #include <folly/FBString.h>
 #include "handlers/index.h"
 #include "utils/mime.h"
+#include "markdown/markdown.h"
 
 void http_connection::read_request() {
     auto self = shared_from_this();
@@ -110,6 +111,8 @@ void http_connection::create_response() {
         hash.get_digest(digest);
 
         boost::beast::ostream(response_.body()) << "md5(" << s << ") = " << toString(digest) << '\n';
+    } else if (uri.path() == "/markdown") {
+        HandleMarkdown(response_);
     } else if (uri.path() == "/") {
         HandleIndex(response_);
       // send_file();
