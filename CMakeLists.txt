@@ -24,6 +24,6 @@ add_executable(server
         src/main.cc
         src/http_connection.cc
         src/state.cc
-        src/md5.cc src/handlers/index.cpp src/handlers/index.h src/fields_alloc.hpp)
+        src/md5.cc src/handlers/index.cpp src/handlers/index.h)
 
 add_executable(markdown src/markdown/main.cpp src/markdown/mdtransform.hpp)

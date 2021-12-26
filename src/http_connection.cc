@@ -189,8 +189,9 @@ void http_connection::send_file()
 
     file_response_.emplace(
             std::piecewise_construct,
-            std::make_tuple(),
-            std::make_tuple(alloc_));
+            std::make_tuple()
+            //std::make_tuple(alloc_)
+            );
 
     file_response_->result(boost::beast::http::status::ok);
     file_response_->keep_alive(false);
